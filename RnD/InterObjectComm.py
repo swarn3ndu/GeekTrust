@@ -1,14 +1,17 @@
 from collections import deque
 import random
 import string 
+import os
+import argparse
+import sys
 
 class Kingdom:
     kingdomName = ""
     kingdomKing = ""
     kingdomEmblem = ""
     ally = []
-    ruler = ""
-    kingdomCount = 0
+    ruler = None
+    kingdomInstances = []
 
     def addToAlly(self,kingdomName):
         if kingdomName not in self.ally:
@@ -19,8 +22,8 @@ class Kingdom:
         self.kingdomKing = King
         self.kingdomName = Name
         self.ally = []
-        self.kingdomCount+=1
         self.addToAlly(Name)
+        self.__class__.kingdomInstances.append(self)
         
     def IdentifyFriendOrFoe(self,kingdomName,message):
         
@@ -40,9 +43,30 @@ class Kingdom:
                     return False
             return True 
 
-    def printAttributes(self):
-        print("\n Emblem = ",self.kingdomEmblem,"\n Name of the King =", self.kingdomKing,"\n Name of the Kingdom =",self.kingdomName)
- 
+    def printAllies(self):
+        for name in self.ally:
+            print(name, end =" ")
+    
+    @classmethod
+    def checkRuler(cls):
+        for instance in cls.kingdomInstances:
+                if len(instance.ally) >= int(len(cls.kingdomInstances) * 0.75):
+                    cls.ruler = instance.kingdomName
+        return cls.ruler
+
+    @classmethod
+    def isKingdom(cls,strName):
+        for instance in cls.kingdomInstances:
+            if strName == instance.kingdomName:
+                return instance
+        return False
+
+    @classmethod
+    def cKingdom(cls,strName):
+        if cls.isKingdom(strName):
+            pass
+
+
 class Messenger:
     to = ""
     auther = ""
@@ -62,7 +86,7 @@ class SesarSalad:
 
     def seasarSaladEncrypt(self,kingdomEmblem):
         #Create Template for Cesear cipher 
-        #Create a list of Uppercase caracters, then rotate them by no of characters in kingdom's emblem
+        #Create a list of Uppercase caracters, then rotate clockwise by no of characters in kingdom's emblem
         encryptedListOfChars = deque(self.listOfAlphabets)
         encryptedListOfChars.rotate(-len(kingdomEmblem))
         
@@ -87,12 +111,25 @@ class SesarSalad:
         #Find The index of encrypted text and then get corresponding decrypted char at the same index
         decryptedListOfChrs = list(map(lambda x:self.listOfAlphabets[dencryptedListOfChars.index(x)], list(text)))
         
-        #result = ''.join([str(chr) for chr in decryptedListOfChrs])
         result = decryptedListOfChrs
         
         return result
+
+def dispatchMessenger(strInputLine):
+    toKingdom = Kingdom.isKingdom(strInputLine.split(' ', 1)[0])
+    if toKingdom != False:
+        Messenger(SPACE,toKingdom,strInputLine.split(' ', 1)[1].replace(" ", "").strip())
         
 
+def tameOfThrones(strFilePath):
+    #SPACE.printAllies()
+    with open(strFilePath) as input:
+        for line in input:
+            dispatchMessenger(line)
+    if Kingdom.checkRuler() != None:
+        Kingdom.isKingdom(Kingdom.checkRuler()).printAllies()
+    else:
+        print("None")
 
 
 SPACE = Kingdom("SPACE","Khan","GORILLA") 
@@ -102,17 +139,24 @@ ICE = Kingdom("ICE","","MAMMOTH")
 AIR = Kingdom("AIR","","OWL")
 FIRE = Kingdom("FIRE","","DRAGON")
 
-seaserCipher = SesarSalad()
+"""
+parser = argparse.ArgumentParser(prog='geektrust.py',
+                                usage='%(prog)s path',
+                                description='Tame Of Thrones: A Golden Crown.')
 
+parser.add_argument('path',
+                    metavar='path',
+                    type=str,
+                    help='Full path for input text file.')
 
-Messenger(SPACE,LAND,"FAIJWJSOOFAMAU")
-Messenger(SPACE,WATER,seaserCipher.seasarSaladEncrypt("OCTOPUS"))
-Messenger(SPACE,WATER,"OCTOPUS")
-Messenger(SPACE,ICE,"STHSTSTVSASOS")
-Messenger(SPACE,AIR,"ROZO")
-Messenger(SPACE,AIR,seaserCipher.seasarSaladEncrypt("OWL"))
-Messenger(SPACE,FIRE,"DRAGON")
+args = parser.parse_args()
+input_path = args.path
 
-for i in SPACE.ally:
-    print(i, end =" ")
-#def tameOfThrones()
+if not os.path.isfile(input_path):
+    print('The path specified does not exist')
+    #sys.exit()
+else:
+    print("gaya")
+    dispatchMessenger(input_path)
+"""
+tameOfThrones("input1.txt")
